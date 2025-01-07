@@ -3,9 +3,68 @@ from azure.ai.vision.imageanalysis import ImageAnalysisClient
 from azure.ai.vision.imageanalysis.models import VisualFeatures
 from azure.core.credentials import AzureKeyCredential
 import sys
+import json
+import numpy as np
+import datetime
 
 print(sys.argv)
+class BoundingBox:
+    ### Coordinates from top left corner
+    
+    def __init__(self):
+        self.corners = np.array([[0,0],[0,0],[0,0],[0,0]])
+        
+    def center(self) -> np.array:
+        result = np.array([0,0])
+        for corner in self.corners:
+            result += corner
+            
+        return result/len(self.corners)
+    
+    def lineHeight(self) -> float:
+        minY = np.min(self.corners[:,1])
+        maxY = np.max(self.corners[:,1])
+        return maxY-minY
+    
+    def isItClose(self, other, nLines:float) -> bool:
+        distance = np.linalg.norm(self.center()-other.center())
+        reference = nLines*(self.lineHeight())   
+        return distance <= reference
+
+class FuelOrder:
+    name: str
+    amount:str
+class ExtractedFields:
+    fuelOrders: list[FuelOrder]
+    ship_to_id : str
+    BOL_number : str
+    delivery_date: datetime    
+    carriers :str
+    terminal : str
+    order_number : str
+    city : str
+    source : str
+    supplier : str
+    address_location : str
+    delivery_address : str
+    consignee_name     : str    
+            
+        
+testb = BoundingBox()
+testb.corners = np.array([[20,20],[100,20],[100,40],[20,40]])
+
+testOther = BoundingBox()
+testOther.corners = np.array([[20,80],[100,80],[100,100],[20,100]])
+print(testb.center())
+print(testb.lineHeight())
+print(testOther.center())
+print(testOther.lineHeight())
+
+print(testb.isItClose(testOther,3))
 quit()
+
+
+
 # Set the values of your computer vision endpoint and computer vision key
 # as environment variables:
 try:
@@ -22,8 +81,15 @@ client = ImageAnalysisClient(
     credential=AzureKeyCredential(key)
 )
 
+
+
+        
+        
+
+
 image_data = None
-with open("41955185.png", "rb") as f:
+inputFileName = sys.argv[1]+".png"
+with open(inputFileName, "rb") as f:
     image_data = f.read()
 
 
@@ -38,6 +104,10 @@ result = client.analyze(
 
 print("Image analysis results:")
 
+#outputFileName = sys.argv[1]+".json"
+#with open(outputFileName, "w") as f:
+#    #f.write(str(result))
+#    json.dump(result.read.blocks, f,ensure_ascii=False, indent=4)
 
 # Print caption results to the console
 print(" Caption:")
@@ -46,6 +116,7 @@ if result.caption is not None:
 
 # Print text (OCR) analysis results to the console
 print(" Read:")
+print(result)
 if result.read is not None:
     for line in result.read.blocks[0].lines:
         print(f"   Line: '{line.text}', Bounding box {line.bounding_polygon}")
