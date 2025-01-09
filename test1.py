@@ -6,7 +6,6 @@ import sys
 import json
 import numpy as np
 import datetime
-
 print(sys.argv)
 class BoundingBox:
     ### Coordinates from top left corner
@@ -26,41 +25,73 @@ class BoundingBox:
         maxY = np.max(self.corners[:,1])
         return maxY-minY
     
-    def isItClose(self, other, nLines:float) -> bool:
-        distance = np.linalg.norm(self.center()-other.center())
+    def verticalDistanceTo(self, other) -> float:
+        distance = np.linalg.norm(self.center()[1]-other.center()[1])
+        return distance
+        
+    def isItVerticallyClose(self, other, nLines:float) -> bool:
+        distance = self.verticalDistanceTo(other)
         reference = nLines*(self.lineHeight())   
         return distance <= reference
+    
+    def isInTheSameLine(self, other ) -> bool:
+        return self.isItVerticallyClose(other,1)
+
+
+    
+class ExtractedField:
+    keywords: list[str]
+    name : str 
+    extractedValue : str
+    def __init__(self,name, keywords):
+        self.name = name
+        self.keywords = keywords
+        self.extractedValue = None
 
 class FuelOrder:
     name: str
     amount:str
 class ExtractedFields:
     fuelOrders: list[FuelOrder]
-    ship_to_id : str
-    BOL_number : str
-    delivery_date: datetime    
-    carriers :str
-    terminal : str
-    order_number : str
-    city : str
-    source : str
-    supplier : str
-    address_location : str
-    delivery_address : str
-    consignee_name     : str    
-            
-        
+    ship_to_id : ExtractedField
+    BOL_number : ExtractedField
+    delivery_date: ExtractedField    
+    carriers :ExtractedField
+    terminal : ExtractedField
+    order_number : ExtractedField
+    city : ExtractedField
+    source : ExtractedField
+    supplier : ExtractedField
+    address_location : ExtractedField
+    delivery_address : ExtractedField
+    consignee_name     : ExtractedField    
+
+    def __init__(self):
+        BOL_number = ExtractedField("BOL_number",["BOL","Bill of Lading", "Invoice"])
+    
+
+class TextField:
+    text : str
+    boundingBox : BoundingBox
+ 
+class ScannedDocumentAnalysis:
+    textFiels: TextField
+    
+       
+    
+
+
 testb = BoundingBox()
 testb.corners = np.array([[20,20],[100,20],[100,40],[20,40]])
 
 testOther = BoundingBox()
-testOther.corners = np.array([[20,80],[100,80],[100,100],[20,100]])
+testOther.corners = np.array([[20+10,80],[100+10,80],[100+10,100],[20+10,100]])
 print(testb.center())
 print(testb.lineHeight())
 print(testOther.center())
 print(testOther.lineHeight())
 
-print(testb.isItClose(testOther,3))
+print(testb.isItVerticallyClose(testOther,3))
 quit()
 
 
