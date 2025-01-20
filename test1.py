@@ -6,6 +6,8 @@ import sys
 import json
 import numpy as np
 import datetime
+from similarity import *
+import matplotlib.pyplot as plt
 print(sys.argv)
 class BoundingBox:
     ### Coordinates from top left corner
@@ -52,22 +54,26 @@ class FuelOrder:
     name: str
     amount:str
 class ExtractedFields:
-    fuelOrders: list[FuelOrder]
-    ship_to_id : ExtractedField
+    # fuelOrders: list[FuelOrder]
+    # ship_to_id : ExtractedField
     BOL_number : ExtractedField
-    delivery_date: ExtractedField    
-    carriers :ExtractedField
-    terminal : ExtractedField
-    order_number : ExtractedField
-    city : ExtractedField
-    source : ExtractedField
-    supplier : ExtractedField
-    address_location : ExtractedField
-    delivery_address : ExtractedField
-    consignee_name     : ExtractedField    
-
+    # delivery_date: ExtractedField    
+    # carriers :ExtractedField
+    # terminal : ExtractedField
+    # order_number : ExtractedField
+    # city : ExtractedField
+    # source : ExtractedField
+    # supplier : ExtractedField
+    # address_location : ExtractedField
+    # delivery_address : ExtractedField
+    # consignee_name     : ExtractedField    
+    fields : list[ExtractedField]
     def __init__(self):
+        
         BOL_number = ExtractedField("BOL_number",["BOL","Bill of Lading", "Invoice"])
+        delivery_date = ExtractedField("delivery_date",["Delivery Date","Arrive", "Date Shipped"])
+
+        self.fields = [BOL_number,delivery_date]
     
 
 class TextField:
@@ -77,22 +83,19 @@ class TextField:
 class ScannedDocumentAnalysis:
     textFiels: TextField
     
-       
-    
 
+#testb = BoundingBox()
+#testb.corners = np.array([[20,20],[100,20],[100,40],[20,40]])
 
-testb = BoundingBox()
-testb.corners = np.array([[20,20],[100,20],[100,40],[20,40]])
+#testOther = BoundingBox()
+#testOther.corners = np.array([[20+10,80],[100+10,80],[100+10,100],[20+10,100]])
+#print(testb.center())
+#print(testb.lineHeight())
+#print(testOther.center())
+#print(testOther.lineHeight())
 
-testOther = BoundingBox()
-testOther.corners = np.array([[20+10,80],[100+10,80],[100+10,100],[20+10,100]])
-print(testb.center())
-print(testb.lineHeight())
-print(testOther.center())
-print(testOther.lineHeight())
-
-print(testb.isItVerticallyClose(testOther,3))
-quit()
+#print(testb.isItVerticallyClose(testOther,3))
+#quit()
 
 
 
@@ -147,9 +150,39 @@ if result.caption is not None:
 
 # Print text (OCR) analysis results to the console
 print(" Read:")
-print(result)
+#print(result)
+
+
 if result.read is not None:
     for line in result.read.blocks[0].lines:
         print(f"   Line: '{line.text}', Bounding box {line.bounding_polygon}")
         for word in line.words:
             print(f"     Word: '{word.text}', Bounding polygon {word.bounding_polygon}, Confidence {word.confidence:.4f}")
+
+fieldsToExtract = ExtractedFields()
+similarityThreshold = 0.7
+if result.read is not None:
+    for line in result.read.blocks[0].lines:
+        for field in fieldsToExtract.fields:
+                similarityLevelsFound = similarities(field.keywords, line.text)
+                similarityFoundQ, index = isItSimilar(similarityLevelsFound,similarityThreshold) 
+                if similarityFoundQ:
+                    field.extractedValue = line.text
+                    print("Similarity found!")
+                    print("line: ", line.text)
+                    print("field: ", field.name)
+                    print("Similarity: ", similarityLevelsFound[index])
+                    #break
+
+                    
+        #print(f"   Line: '{line.text}', Bounding box {line.bounding_polygon}")
+        #for word in line.words:
+        #    print(f"     Word: '{word.text}', Bounding polygon {word.bounding_polygon}, Confidence {word.confidence:.4f}")
+
+
+img = plt.imread(inputFileName)
+plt.imshow(img)
+
+
+plt.show()
+

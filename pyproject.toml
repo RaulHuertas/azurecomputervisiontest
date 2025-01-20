@@ -24,6 +24,8 @@ azure-ai-vision-imageanalysis = "^1.0.0"
 torch = "^2.5.1"
 torchvision = "^0.20.1"
 transformers = "^4.47.1"
+pyqt5 = "^5.15.11"
+pyqt6 = "^6.8.0"
 
 [tool.poetry.group.dev.dependencies]
 ipykernel = "^6.29.5"
